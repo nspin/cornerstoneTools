@@ -1,4 +1,4 @@
-/*! cornerstone-tools - 2.0.0 - 2018-02-12 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
+/*! cornerstone-tools - 2.0.0 - 2018-02-23 | (c) 2017 Chris Hafey | https://github.com/cornerstonejs/cornerstoneTools */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -296,6 +296,14 @@ Object.defineProperty(exports, "__esModule", {
 });
 var elementToolOptions = {};
 
+/**
+ * Retrieve the options object associated with a particular toolType and element
+ *
+ * @param {string} toolType Tool type identifier of the target options object
+ * @param {HTMLElement} element Element of the target options object
+ *
+ * @return {Object} Target options object (empty if not yet set)
+ */
 function getToolOptions(toolType, element) {
   if (!elementToolOptions[toolType]) {
     return {};
@@ -313,6 +321,15 @@ function getToolOptions(toolType, element) {
   return optionsObject.options;
 }
 
+/**
+ * Set the options object associated with a particular toolType and element
+ *
+ * @param {string} toolType Tool type identifier of the target options object
+ * @param {HTMLElement} element Element of the target options object
+ * @param {Object} options Options object to store at target
+ *
+ * @return {void}
+ */
 function setToolOptions(toolType, element, options) {
   if (!elementToolOptions[toolType]) {
     elementToolOptions[toolType] = [{
@@ -334,10 +351,20 @@ function setToolOptions(toolType, element, options) {
       options: options
     });
   } else {
-    elementToolOptions[toolType][index].options = options;
+    var elementOptions = elementToolOptions[toolType][index].options || {};
+
+    elementToolOptions[toolType][index].options = Object.assign(elementOptions, options);
   }
 }
 
+/**
+ * Clear the options object associated with a particular toolType and element
+ *
+ * @param {string} toolType Tool type identifier of the target options object
+ * @param {HTMLElement} element Element of the target options object
+ *
+ * @return {void}
+ */
 function clearToolOptions(toolType, element) {
   var toolOptions = elementToolOptions[toolType];
 
@@ -348,10 +375,24 @@ function clearToolOptions(toolType, element) {
   }
 }
 
+/**
+ * Clear the options objects associated with a particular toolType
+ *
+ * @param {string} toolType Tool type identifier of the target options objects
+ *
+ * @return {void}
+ */
 function clearToolOptionsByToolType(toolType) {
   delete elementToolOptions[toolType];
 }
 
+/**
+ * Clear the options objects associated with a particular element
+ *
+ * @param {HTMLElement} element Element of the target options objects
+ *
+ * @return {void}
+ */
 function clearToolOptionsByElement(element) {
   for (var toolType in elementToolOptions) {
     elementToolOptions[toolType] = elementToolOptions[toolType].filter(function (toolOptionObject) {
@@ -8395,6 +8436,7 @@ var _toolOptions = __webpack_require__(3);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var toolType = 'stackScroll';
+var toolTypeTouchDrag = 'stackScrollTouchDrag';
 
 function mouseUpCallback(e) {
   var eventData = e.detail;
@@ -8498,7 +8540,7 @@ var options = {
     deltaY: 0
   }
 };
-var stackScrollTouchDrag = (0, _touchDragTool2.default)(dragCallback, toolType, options);
+var stackScrollTouchDrag = (0, _touchDragTool2.default)(dragCallback, toolTypeTouchDrag, options);
 
 function multiTouchDragCallback(e) {
   var eventData = e.detail;
@@ -9923,7 +9965,7 @@ function mouseWheel(e) {
   var wheelDelta = void 0;
 
   if (e.wheelDelta) {
-    wheelDelta = -e.wheelDelta;
+    wheelDelta = e.wheelDelta;
   } else if (e.deltaY) {
     wheelDelta = -e.deltaY;
   } else if (e.detail) {
@@ -11378,6 +11420,12 @@ function chooseLocation(e) {
     // Find within the element's stack the closest image plane to selected location
     stackData.imageIds.forEach(function (imageId, index) {
       var imagePlane = cornerstone.metaData.get('imagePlaneModule', imageId);
+
+      // Skip if the image plane is not ready
+      if (!imagePlane || !imagePlane.imagePositionPatient || !imagePlane.rowCosines || !imagePlane.columnCosines) {
+        return;
+      }
+
       var imagePosition = (0, _convertToVector2.default)(imagePlane.imagePositionPatient);
       var row = (0, _convertToVector2.default)(imagePlane.rowCosines);
       var column = (0, _convertToVector2.default)(imagePlane.columnCosines);
